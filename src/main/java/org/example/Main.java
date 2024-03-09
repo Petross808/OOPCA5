@@ -18,6 +18,10 @@ public class Main {
             List<Circuit> circuits = ICircuitDao.getAllCircuits();     // call a method in the DAO
             for (Circuit circuit : circuits)
                 System.out.println("Circuit: " + circuit.toString());
+
+            System.out.println("\nCall getCircuitById(5)");
+            System.out.println("Circuit: " + ICircuitDao.getCircuitById(5));
+
         }
         catch(DaoException e)
         {

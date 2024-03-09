@@ -8,6 +8,7 @@ import java.util.List;
 public interface CircuitDaoInterface
 {
     List<Circuit> getAllCircuits() throws DaoException;
+    Circuit getCircuitById(int id) throws DaoException;
 }
 
 

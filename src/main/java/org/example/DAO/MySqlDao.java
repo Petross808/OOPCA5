@@ -10,7 +10,7 @@ public class MySqlDao
     public Connection getConnection() throws DaoException
     {
         String driver = "com.mysql.cj.jdbc.Driver";
-        String url = "jdbc:mysql://localhost:3306/DATABASENAME";
+        String url = "jdbc:mysql://localhost:3306/F1";
         String username = "root";
         String password = "";
         Connection connection = null;
@@ -100,7 +100,7 @@ public class MySqlDao
         Wrapper object that holds a connection, statement and resultSet.
         Is used to pass values between the SQLConnectionDecorator and its lambda function.
     */
-    private class SQLWrapper
+    class SQLWrapper
     {
         Connection connection;
         PreparedStatement statement;
@@ -115,7 +115,7 @@ public class MySqlDao
 
     // Written by Petr Sulc
     @FunctionalInterface
-    private interface CheckedFunction<T, R> {
-        R apply(T t) throws DaoException;
+    interface CheckedFunction<T, R> {
+        R apply(T t) throws SQLException;
     }
 }

@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.DAO.CircuitDaoInterface;
+import org.example.DAO.JsonConverter;
 import org.example.DAO.MySqlCircuitDao;
 import org.example.DTO.Circuit;
 import org.example.Exceptions.DaoException;
@@ -11,6 +12,7 @@ public class Main {
     public static void main(String[] args) {
 
         CircuitDaoInterface ICircuitDao = new MySqlCircuitDao();
+        JsonConverter JsonConverter = new JsonConverter();
 
         try
         {
@@ -42,6 +44,16 @@ public class Main {
             List<Circuit> filteredCircuits = ICircuitDao.findCircuitsUsingFilter((e) -> e.getCountry().equals("Austria"));
             for (Circuit filteredCircuit : filteredCircuits)
                 System.out.println("Circuit: " + filteredCircuit.toString());
+
+            // By Tomas Szabo
+            System.out.println("\nCall circuitsListToJson(circuitList)");
+            List<Circuit> circuitList = ICircuitDao.getAllCircuits();
+            System.out.println("JSON: " + JsonConverter.circuitListToJson(circuitList));
+
+            // By Tomas Szabo
+            System.out.println("\nCall circuitsToJson(circuitKey)");
+            Circuit circuitKey = ICircuitDao.getCircuitById(5);
+            System.out.println("JSON: " + JsonConverter.circuitToJson(circuitKey));
         }
         catch(DaoException e)
         {

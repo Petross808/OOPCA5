@@ -135,7 +135,7 @@ class MySqlCircuitDaoTest { // by Darren Meidl
 
     @Test
     void findCircuitsUsingFilterTestByName() throws DaoException { // By Petr Sulc --- 08/04/2024
-        System.out.println("TEST: 'findCircuitsUsingFilter((c1) -> c1.getId() == 2)' ");
+        System.out.println("TEST: 'findCircuitsUsingFilter((c1) -> c1.getCircuitName().equals(\"Jeddah Corniche Circuit\")' ");
         List<Circuit> expected = new ArrayList<Circuit>();
         expected.add(new Circuit(2, "Jeddah Corniche Circuit", "Saudi Arabia", 6.1f, 27));
         List<Circuit> actual = dao.findCircuitsUsingFilter((c1) -> c1.getCircuitName().equals("Jeddah Corniche Circuit"));

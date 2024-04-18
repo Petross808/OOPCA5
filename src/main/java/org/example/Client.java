@@ -2,7 +2,6 @@ package org.example;
 
 import org.example.DAO.JsonConverter;
 import org.example.DTO.Circuit;
-import org.example.Exceptions.DaoException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -41,13 +40,14 @@ public class Client {
                 // Show menu
                 System.out.print(
                         "|********************************|\n" +
-                                "|***** F1 CIRCUITS DATABASE *****|\n" +
-                                "|********************************|\n" +
-                                "1. Display Circuit by ID\n" +
-                                "2. Display All Circuits\n" +
-                                "3. Add a Circuit\n" +
-                                "4. Quit\n" +
-                                "Please enter a command: ");
+                        "|***** F1 CIRCUITS DATABASE *****|\n" +
+                        "|********************************|\n" +
+                        "1. Display Circuit by ID\n" +
+                        "2. Display All Circuits\n" +
+                        "3. Add a Circuit\n" +
+                        "4. Delete a Circuit\n" +
+                        "5. Quit\n" +
+                        "Please enter a command: ");
                 consoleInput = new Scanner(System.in);
                 requestId = consoleInput.nextLine();
                 request = ServerRequest.idToRequest(requestId);
@@ -93,6 +93,15 @@ public class Client {
                         else
                             System.out.println("Client message: Response from server: \"" + response + "\"");
                         break;
+                    case DELETE_CIRCUIT:
+                        // By Darren Meidl --- 15/04/2024
+                        System.out.println("++DELETE CIRCUIT BY ID++");
+                        System.out.print("Enter the ID of a Circuit you want to delete: ");
+                        id = consoleInput.nextLine(); // read user's input
+                        out.println(id); // send id to server
+                        response = in.readLine(); // wait for response
+                        printCircuit(jsonConverter.jsonToCircuit(response));
+                        break;
                     case DISCONNECT:
                         System.out.println("Goodbye :(");
                         response = in.readLine();   // wait for response
@@ -107,8 +116,6 @@ public class Client {
             } while (running);
         } catch (IOException e) {
             System.out.println("Client message: IOException: " + e);
-        } catch (DaoException e) {
-            throw new RuntimeException(e);
         }
         // sockets and streams are closed automatically due to try-with-resources, so no finally block required here.
 

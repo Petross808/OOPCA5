@@ -27,8 +27,8 @@ public class Server {
 
     public void start() {
 
-        ServerSocket serverSocket =null;
-        Socket clientSocket =null;
+        ServerSocket serverSocket = null;
+        Socket clientSocket = null;
 
         try {
             serverSocket = new ServerSocket(SERVER_PORT_NUMBER);
@@ -45,20 +45,15 @@ public class Server {
                 System.out.println("Server: Port number of remote client: " + clientSocket.getPort());
                 System.out.println("Server: Port number of the socket used to talk with client " + clientSocket.getLocalPort());
 
-                // create a new ClientHandler for the requesting client, passing in the socket, client number, JsonConverter & CircuitDaoInterface
-                JsonConverter j = new JsonConverter();
-                CircuitDaoInterface i = new MySqlCircuitDao();
                 // pass the handler into a new thread, and start the handler running in the thread.
-                Thread t = new Thread(new ClientHandler(clientSocket, clientNumber, i, j));
+                Thread t = new Thread(new ClientHandler(clientSocket, clientNumber));
                 t.start();
 
                 System.out.println("Server: ClientHandler started in thread " + t.getName() + " for client " + clientNumber + ". ");
-
             }
         } catch (IOException ex) {
             System.out.println(ex);
-        }
-        finally{
+        } finally {
             try {
                 if(clientSocket!=null)
                     clientSocket.close();
@@ -71,7 +66,6 @@ public class Server {
             } catch (IOException e) {
                 System.out.println(e);
             }
-
         }
         System.out.println("Server: Server exiting, Goodbye!");
     }
@@ -85,15 +79,15 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
     PrintWriter socketWriter;
     Socket clientSocket;
     final int clientNumber;
-    private CircuitDaoInterface circuitDaoInterface;
-    private JsonConverter jsonConverter;
+    final CircuitDaoInterface circuitDaoInterface;
+    final JsonConverter jsonConverter;
 
     // Constructor by Darren Meidl --- 13/04/2024
-    public ClientHandler(Socket clientSocket, int clientNumber, CircuitDaoInterface i, JsonConverter j) {
+    public ClientHandler(Socket clientSocket, int clientNumber) {
         this.clientSocket = clientSocket;  // store socket for closing later
         this.clientNumber = clientNumber;  // ID number that we are assigning to this client
-        this.circuitDaoInterface = i;
-        this.jsonConverter = j;
+        this.circuitDaoInterface = new MySqlCircuitDao();
+        this.jsonConverter = new JsonConverter();
         try {
             // assign to fields
             this.socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -152,6 +146,15 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
                             socketWriter.println("Insertion Failed: " + e.getMessage());
                         }
                         break;
+                    case DELETE_CIRCUIT:
+                        // By Darren Meidl --- 15/04/2024
+                        cID = socketReader.readLine(); // read id sent by client
+                        id = Integer.parseInt(cID); // convert id to integer
+                        c = circuitDaoInterface.deleteCircuitById(id); // delete circuit by id
+                        jsonMessage = jsonConverter.circuitToJson(c);
+                        socketWriter.println(jsonMessage); // send the received message back to the client
+                        System.out.println("Server message: circuit with id " + id + " sent to client.");
+                        break;
                     case DISCONNECT:
                         socketWriter.println("Sorry to see you leaving. Goodbye.");
                         System.out.println("Server message: Client has notified us that it is quitting.");
@@ -190,7 +193,8 @@ enum ServerRequest
     GET_CIRCUIT_BY_ID(1),
     GET_ALL_CIRCUITS(2),
     ADD_NEW_CIRCUIT(3),
-    DISCONNECT(4);
+    DELETE_CIRCUIT(4),
+    DISCONNECT(5);
 
     public final int id;
     ServerRequest(int id)

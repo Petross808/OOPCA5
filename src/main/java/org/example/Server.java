@@ -6,10 +6,7 @@ import org.example.DAO.MySqlCircuitDao;
 import org.example.DTO.Circuit;
 import org.example.Exceptions.DaoException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
@@ -77,6 +74,7 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
 {
     BufferedReader socketReader;
     PrintWriter socketWriter;
+    DataOutputStream dataOutputStream;
     Socket clientSocket;
     final int clientNumber;
     final CircuitDaoInterface circuitDaoInterface;
@@ -92,6 +90,7 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
             // assign to fields
             this.socketWriter = new PrintWriter(clientSocket.getOutputStream(), true);
             this.socketReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            this.dataOutputStream = new DataOutputStream( clientSocket.getOutputStream());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -128,7 +127,7 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
                         List<Circuit> message = circuitDaoInterface.getAllCircuits(); // get all circuits from DAO method
                         jsonMessage = jsonConverter.circuitListToJson(message); // converts to json
                         socketWriter.println(jsonMessage);   // send the received message back to the client
-                        System.out.println("Server message: json message sent to client.");
+                        System.out.println("Server message: Json circuit list message sent to client.");
                         break;
                     case ADD_NEW_CIRCUIT:
                         // By Petr Sulc --- 14/04/2024
@@ -154,6 +153,20 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
                         jsonMessage = jsonConverter.circuitToJson(c);
                         socketWriter.println(jsonMessage); // send the received message back to the client
                         System.out.println("Server message: circuit with id " + id + " sent to client.");
+                        break;
+                    case GET_IMAGES_LIST:
+                        // By Tomas Szabo --- 18/04/2024
+                        System.out.println("++GET IMAGES LIST FROM THE SERVER++");
+                        String jsonImagesList = "[\"F1Logo.png\", \"F1Circuits.png\"]";
+                        socketWriter.println(jsonImagesList); // send the received message back to the client
+                        System.out.println("Server message: Json list of images sent to the client.");
+                        String iNumber = socketReader.readLine();
+                        System.out.println("Sending the File to the Client");
+                        switch(iNumber) {
+                            case "1" -> sendFile("images/F1Logo.png", dataOutputStream);  // hardcode location for convenience
+                            case "2" -> sendFile("images/F1Circuits.png", dataOutputStream);  // hardcode location for convenience
+                            default -> System.out.println("Wrong input");
+                        }
                         break;
                     case DISCONNECT:
                         socketWriter.println("Sorry to see you leaving. Goodbye.");
@@ -184,6 +197,29 @@ class ClientHandler implements Runnable   // each ClientHandler communicates wit
         }
         System.out.println("Server: (ClientHandler): Handler for Client " + clientNumber + " is terminating .....");
     }
+
+    private static void sendFile(String path, DataOutputStream dataOutputStream) throws IOException
+    {
+        int bytes = 0;
+        // Open the File at the specified location (path)
+        File file = new File(path);
+        FileInputStream fileInputStream = new FileInputStream(file);
+
+        // send the length (in bytes) of the file to the server
+        dataOutputStream.writeLong(file.length());
+
+        // Here we break file into chunks
+        byte[] buffer = new byte[4 * 1024]; // 4 kilobyte buffer
+
+        // read bytes from file into the buffer until buffer is full, or we reached end of file
+        while ((bytes = fileInputStream.read(buffer))!= -1) {
+            // Send the buffer contents to Server Socket, along with the count of the number of bytes
+            dataOutputStream.write(buffer, 0, bytes);
+            dataOutputStream.flush();   // force the data into the stream
+        }
+        // close the file
+        fileInputStream.close();
+    }
 }
 
 // By Petr Sulc --- 14/04/2024
@@ -194,7 +230,8 @@ enum ServerRequest
     GET_ALL_CIRCUITS(2),
     ADD_NEW_CIRCUIT(3),
     DELETE_CIRCUIT(4),
-    DISCONNECT(5);
+    GET_IMAGES_LIST(5),
+    DISCONNECT(6);
 
     public final int id;
     ServerRequest(int id)

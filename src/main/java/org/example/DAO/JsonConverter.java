@@ -27,4 +27,7 @@ public class JsonConverter {
     public Circuit jsonToCircuit(String json) {
         return gsonParser.fromJson(json, Circuit.class);
     }
+
+    // Feature 13 | Written by Tomas Szabo --- 18/04/2024 - 10 minutes
+    public String[] jsonToImages(String json) { return gsonParser.fromJson(json, String[].class); }
 }
